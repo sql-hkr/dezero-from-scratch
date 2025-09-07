@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 
-class Varialbe:
+class Variable:
     def __init__(self, data: np.ndarray) -> None:
         self.data = data
         self.grad: Optional[np.ndarray] = None
@@ -35,9 +35,9 @@ def as_array(x) -> np.ndarray:
 
 
 class Function:
-    def __call__(self, input: Varialbe) -> Varialbe:
+    def __call__(self, input: Variable) -> Variable:
         self.input = input
-        self.output = Varialbe(as_array(self.forward(input.data)))
+        self.output = Variable(as_array(self.forward(input.data)))
         self.output.set_creator(self)
         return self.output
 
@@ -64,34 +64,34 @@ class Exp(Function):
         return np.exp(self.input.data) * gy
 
 
-def square(x: Varialbe) -> Varialbe:
+def square(x: Variable) -> Variable:
     return Square()(x)
 
 
-def exp(x: Varialbe) -> Varialbe:
+def exp(x: Variable) -> Variable:
     return Exp()(x)
 
 
-def numerical_diff(f: Callable[[Varialbe], Varialbe], x: Varialbe, eps=1e-4):
-    return (f(Varialbe(x.data + eps)).data - f(Varialbe(x.data - eps)).data) / (2 * eps)
+def numerical_diff(f: Callable[[Variable], Variable], x: Variable, eps=1e-4):
+    return (f(Variable(x.data + eps)).data - f(Variable(x.data - eps)).data) / (2 * eps)
 
 
 class SquareTest(unittest.TestCase):
     def test_forward(self):
-        x = Varialbe(np.array(2.0))
+        x = Variable(np.array(2.0))
         y = square(x)
         expected = np.array(4.0)
         self.assertEqual(y.data, expected)
 
     def test_backward(self):
-        x = Varialbe(np.array(3.0))
+        x = Variable(np.array(3.0))
         y = square(x)
         y.backward()
         expected = np.array(6.0)
         self.assertEqual(x.grad, expected)
 
     def test_gradient_check(self):
-        x = Varialbe(np.random.rand(1))
+        x = Variable(np.random.rand(1))
         y = square(x)
         y.backward()
         num_grad = numerical_diff(square, x)

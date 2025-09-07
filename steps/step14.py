@@ -2,7 +2,7 @@ from typing import Optional, Any
 import numpy as np
 
 
-class Varialbe:
+class Variable:
     def __init__(self, data: np.ndarray) -> None:
         self.data = data
         self.grad: Optional[np.ndarray] = None
@@ -41,12 +41,12 @@ def as_array(x) -> np.ndarray:
 
 
 class Function:
-    def __call__(self, *inputs: Varialbe) -> Any:
+    def __call__(self, *inputs: Variable) -> Any:
         xs = [x.data for x in inputs]
         ys = self.forward(*xs)
         if not isinstance(ys, tuple):
             ys = (ys,)
-        outputs = [Varialbe(as_array(y)) for y in ys]
+        outputs = [Variable(as_array(y)) for y in ys]
         for output in outputs:
             output.set_creator(self)
         self.inputs = inputs
@@ -76,20 +76,20 @@ class Add(Function):
         return [gys[0]] * 2
 
 
-def square(x: Varialbe) -> Varialbe:
+def square(x: Variable) -> Variable:
     return Square()(x)
 
 
-def add(x0: Varialbe, x1: Varialbe) -> Varialbe:
+def add(x0: Variable, x1: Variable) -> Variable:
     return Add()(x0, x1)
 
 
-x = Varialbe(np.array(3.0))
+x = Variable(np.array(3.0))
 y = add(x, x)
 y.backward()
 print(x.grad)
 
-x = Varialbe(np.array(3.0))  # or x.cleargrad()
+x = Variable(np.array(3.0))  # or x.cleargrad()
 y = add(add(x, x), x)
 y.backward()
 print(x.grad)

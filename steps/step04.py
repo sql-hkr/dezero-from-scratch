@@ -2,14 +2,14 @@ from typing import Callable
 import numpy as np
 
 
-class Varialbe:
+class Variable:
     def __init__(self, data) -> None:
         self.data = data
 
 
 class Function:
-    def __call__(self, input: Varialbe) -> Varialbe:
-        return Varialbe(self.forward(input.data))
+    def __call__(self, input: Variable) -> Variable:
+        return Variable(self.forward(input.data))
 
     def forward(self, x):
         raise NotImplementedError
@@ -25,12 +25,12 @@ class Exp(Function):
         return np.exp(x)
 
 
-def numerical_diff(f: Callable[[Varialbe], Varialbe], x: Varialbe, eps=1e-4):
-    return (f(Varialbe(x.data + eps)).data - f(Varialbe(x.data - eps)).data) / (2 * eps)
+def numerical_diff(f: Callable[[Variable], Variable], x: Variable, eps=1e-4):
+    return (f(Variable(x.data + eps)).data - f(Variable(x.data - eps)).data) / (2 * eps)
 
 
 f = Square()
-x = Varialbe(np.array(2.0))
+x = Variable(np.array(2.0))
 dy = numerical_diff(f, x)
 print(dy)
 
@@ -42,6 +42,6 @@ def g(x):
     return C(B(A(x)))
 
 
-x = Varialbe(np.array(0.5))
+x = Variable(np.array(0.5))
 dy = numerical_diff(g, x)
 print(dy)

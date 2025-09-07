@@ -5,7 +5,7 @@ if "__file__" in globals():
     sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 import numpy as np
-from dezero import Varialbe
+from dezero import Variable
 
 
 def sphere(x, y):
@@ -27,8 +27,8 @@ def goldstein(x, y):
     )
 
 
-x = Varialbe(np.array(1.0))
-y = Varialbe(np.array(1.0))
+x = Variable(np.array(1.0))
+y = Variable(np.array(1.0))
 z = goldstein(x, y)  # sphere(x, y) / matyas(x, y)
 z.backward()
 print(x.grad, y.grad)

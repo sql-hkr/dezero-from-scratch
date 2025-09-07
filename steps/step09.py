@@ -2,7 +2,7 @@ from typing import Optional
 import numpy as np
 
 
-class Varialbe:
+class Variable:
     def __init__(self, data: np.ndarray) -> None:
         self.data = data
         self.grad: Optional[np.ndarray] = None
@@ -32,9 +32,9 @@ def as_array(x) -> np.ndarray:
 
 
 class Function:
-    def __call__(self, input: Varialbe) -> Varialbe:
+    def __call__(self, input: Variable) -> Variable:
         self.input = input
-        self.output = Varialbe(as_array(self.forward(input.data)))
+        self.output = Variable(as_array(self.forward(input.data)))
         self.output.set_creator(self)
         return self.output
 
@@ -61,15 +61,15 @@ class Exp(Function):
         return np.exp(self.input.data) * gy
 
 
-def square(x: Varialbe) -> Varialbe:
+def square(x: Variable) -> Variable:
     return Square()(x)
 
 
-def exp(x: Varialbe) -> Varialbe:
+def exp(x: Variable) -> Variable:
     return Exp()(x)
 
 
-x = Varialbe(np.array(0.5))
+x = Variable(np.array(0.5))
 y = square(exp(square(x)))
 y.backward()
 print(x.grad)

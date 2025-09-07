@@ -1,14 +1,14 @@
 import numpy as np
 
 
-class Varialbe:
+class Variable:
     def __init__(self, data) -> None:
         self.data = data
 
 
 class Function:
-    def __call__(self, input: Varialbe) -> Varialbe:
-        return Varialbe(self.forward(input.data))
+    def __call__(self, input: Variable) -> Variable:
+        return Variable(self.forward(input.data))
 
     def forward(self, x):
         raise NotImplementedError
@@ -19,7 +19,7 @@ class Square(Function):
         return x**2
 
 
-x = Varialbe(np.array(10))
+x = Variable(np.array(10))
 f = Square()
 y = f(x)
 print(type(y))

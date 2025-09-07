@@ -3,7 +3,7 @@ import weakref
 import numpy as np
 
 
-class Varialbe:
+class Variable:
     def __init__(self, data: np.ndarray) -> None:
         self.data = data
         self.grad: Optional[np.ndarray] = None
@@ -55,12 +55,12 @@ def as_array(x) -> np.ndarray:
 
 
 class Function:
-    def __call__(self, *inputs: Varialbe) -> Any:
+    def __call__(self, *inputs: Variable) -> Any:
         xs = [x.data for x in inputs]
         ys = self.forward(*xs)
         if not isinstance(ys, tuple):
             ys = (ys,)
-        outputs = [Varialbe(as_array(y)) for y in ys]
+        outputs = [Variable(as_array(y)) for y in ys]
         self.generation = max([x.generation for x in inputs])
         for output in outputs:
             output.set_creator(self)
@@ -91,14 +91,14 @@ class Add(Function):
         return [gys[0]] * 2
 
 
-def square(x: Varialbe) -> Varialbe:
+def square(x: Variable) -> Variable:
     return Square()(x)
 
 
-def add(x0: Varialbe, x1: Varialbe) -> Varialbe:
+def add(x0: Variable, x1: Variable) -> Variable:
     return Add()(x0, x1)
 
 
 for i in range(10):
-    x = Varialbe(np.random.randn(10000))  # big data
+    x = Variable(np.random.randn(10000))  # big data
     y = square(square(square(x)))

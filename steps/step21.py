@@ -22,7 +22,7 @@ def no_grad():
     return using_config("enable_backprop", False)
 
 
-class Varialbe:
+class Variable:
     __array_priority__ = 200
 
     def __init__(self, data: np.ndarray, name: Optional[str] = None) -> None:
@@ -107,10 +107,10 @@ class Varialbe:
                     add_func(x.creator)
 
 
-def as_variable(obj) -> Varialbe:
-    if isinstance(obj, Varialbe):
+def as_variable(obj) -> Variable:
+    if isinstance(obj, Variable):
         return obj
-    return Varialbe(obj)
+    return Variable(obj)
 
 
 def as_array(x) -> np.ndarray:
@@ -120,13 +120,13 @@ def as_array(x) -> np.ndarray:
 
 
 class Function:
-    def __call__(self, *input: Varialbe | np.ndarray | int | float) -> Any:
+    def __call__(self, *input: Variable | np.ndarray | int | float) -> Any:
         inputs = [as_variable(x) for x in input]
         xs = [x.data for x in inputs]
         ys = self.forward(*xs)
         if not isinstance(ys, tuple):
             ys = (ys,)
-        outputs = [Varialbe(as_array(y)) for y in ys]
+        outputs = [Variable(as_array(y)) for y in ys]
         if Config.enable_backprop:
             self.generation = max([x.generation for x in inputs])
             for output in outputs:
@@ -150,7 +150,7 @@ class Add(Function):
         return [gys[0]] * 2
 
 
-def add(x0, x1) -> Varialbe:
+def add(x0, x1) -> Variable:
     return Add()(x0, x1)
 
 
@@ -163,11 +163,11 @@ class Mul(Function):
         return [gys[0] * x1, gys[0] * x0]
 
 
-def mul(x0, x1) -> Varialbe:
+def mul(x0, x1) -> Variable:
     return Mul()(x0, x1)
 
 
-x = Varialbe(np.array(2.0))
+x = Variable(np.array(2.0))
 y = x + np.array(3.0)
 print(y)
 
