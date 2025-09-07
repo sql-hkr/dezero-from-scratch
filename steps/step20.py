@@ -22,7 +22,7 @@ def no_grad():
     return using_config("enable_backprop", False)
 
 
-class Varialbe:
+class Variable:
     def __init__(self, data: np.ndarray, name: Optional[str] = None) -> None:
         self.data = data
         self.name = name
@@ -106,12 +106,12 @@ def as_array(x) -> np.ndarray:
 
 
 class Function:
-    def __call__(self, *inputs: Varialbe) -> Any:
+    def __call__(self, *inputs: Variable) -> Any:
         xs = [x.data for x in inputs]
         ys = self.forward(*xs)
         if not isinstance(ys, tuple):
             ys = (ys,)
-        outputs = [Varialbe(as_array(y)) for y in ys]
+        outputs = [Variable(as_array(y)) for y in ys]
         if Config.enable_backprop:
             self.generation = max([x.generation for x in inputs])
             for output in outputs:
@@ -135,7 +135,7 @@ class Square(Function):
         return 2 * self.inputs[0].data * gys[0]
 
 
-def square(x: Varialbe) -> Varialbe:
+def square(x: Variable) -> Variable:
     return Square()(x)
 
 
@@ -147,7 +147,7 @@ class Add(Function):
         return [gys[0]] * 2
 
 
-def add(x0: Varialbe, x1: Varialbe) -> Varialbe:
+def add(x0: Variable, x1: Variable) -> Variable:
     return Add()(x0, x1)
 
 
@@ -160,13 +160,13 @@ class Mul(Function):
         return [gys[0] * x1, gys[0] * x0]
 
 
-def mul(x0: Varialbe, x1: Varialbe) -> Varialbe:
+def mul(x0: Variable, x1: Variable) -> Variable:
     return Mul()(x0, x1)
 
 
-a = Varialbe(np.array(3.0))
-b = Varialbe(np.array(2.0))
-c = Varialbe(np.array(1.0))
+a = Variable(np.array(3.0))
+b = Variable(np.array(2.0))
+c = Variable(np.array(1.0))
 
 # y = add(mul(a, b), c)
 y = a * b + c

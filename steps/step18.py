@@ -22,7 +22,7 @@ def no_grad():
     return using_config("enable_backprop", False)
 
 
-class Varialbe:
+class Variable:
     def __init__(self, data: np.ndarray) -> None:
         self.data = data
         self.grad: Optional[np.ndarray] = None
@@ -74,12 +74,12 @@ def as_array(x) -> np.ndarray:
 
 
 class Function:
-    def __call__(self, *inputs: Varialbe) -> Any:
+    def __call__(self, *inputs: Variable) -> Any:
         xs = [x.data for x in inputs]
         ys = self.forward(*xs)
         if not isinstance(ys, tuple):
             ys = (ys,)
-        outputs = [Varialbe(as_array(y)) for y in ys]
+        outputs = [Variable(as_array(y)) for y in ys]
         if Config.enable_backprop:
             self.generation = max([x.generation for x in inputs])
             for output in outputs:
@@ -111,16 +111,16 @@ class Add(Function):
         return [gys[0]] * 2
 
 
-def square(x: Varialbe) -> Varialbe:
+def square(x: Variable) -> Variable:
     return Square()(x)
 
 
-def add(x0: Varialbe, x1: Varialbe) -> Varialbe:
+def add(x0: Variable, x1: Variable) -> Variable:
     return Add()(x0, x1)
 
 
-x0 = Varialbe(np.array(1.0))
-x1 = Varialbe(np.array(1.0))
+x0 = Variable(np.array(1.0))
+x1 = Variable(np.array(1.0))
 t = add(x0, x1)
 y = add(x0, t)
 y.backward()
@@ -128,9 +128,9 @@ print(y.grad, t.grad)
 print(x0.grad, x1.grad)
 
 with using_config("enable_backprop", False):
-    x = Varialbe(np.array(2.0))
+    x = Variable(np.array(2.0))
     y = square(x)
 
 with no_grad():
-    x = Varialbe(np.array(2.0))
+    x = Variable(np.array(2.0))
     y = square(x)

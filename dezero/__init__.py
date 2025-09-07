@@ -1,7 +1,7 @@
 is_simple_core = True
 
 if is_simple_core:
-    from dezero.core_simple import Varialbe
+    from dezero.core_simple import Variable
     from dezero.core_simple import Function
     from dezero.core_simple import using_config
     from dezero.core_simple import no_grad
