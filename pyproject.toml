@@ -1,0 +1,21 @@
+[project]
+name = "dezero"
+version = "0.1.0"
+description = "Deep Learning Framework from Zero"
+readme = "README.md"
+authors = [
+    { name = "sql-hkr", email = "sql.hkr@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "seaborn>=0.13.2",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.3,<0.9.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.13.0",
+]
