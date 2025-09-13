@@ -141,6 +141,9 @@ class Variable:
                 axes = axes[0]
         return dezero.functions.transpose(self, axes)
 
+    def sum(self, axis=None, keepdims=False):
+        return dezero.functions.sum(self, axis, keepdims)
+
     @property
     def T(self):
         return dezero.functions.transpose(self)
@@ -183,13 +186,24 @@ class Function:
 
 class Add(Function):
     def forward(self, *xs: np.ndarray) -> np.ndarray:
+        self.x0_shape, self.x1_shape = xs[0].shape, xs[1].shape
         return xs[0] + xs[1]
 
     def backward(self, *gys: Variable) -> list[Variable]:
-        return [gys[0]] * 2
+        gx0, gx1 = gys[0], gys[0]
+        if self.x0_shape != self.x1_shape:  # for broadcast
+            return [
+                dezero.functions.sum_to(gx0, self.x0_shape),
+                dezero.functions.sum_to(gx1, self.x1_shape),
+            ]
+        return [gx0, gx1]
 
 
 def add(x0, x1) -> Variable:
+    if not isinstance(x0, (np.ndarray, Variable)):
+        x0 = as_array(x0)
+    if not isinstance(x1, (np.ndarray, Variable)):
+        x1 = as_array(x1)
     return Add()(x0, x1)
 
 
@@ -199,7 +213,14 @@ class Mul(Function):
 
     def backward(self, *gys):
         x0, x1 = self.inputs
-        return [gys[0] * x1, gys[0] * x0]
+        gx0 = gys[0] * x1
+        gx1 = gys[0] * x0
+        if x0.shape != x1.shape:  # for broadcast
+            return [
+                dezero.functions.sum_to(gx0, x0.shape),
+                dezero.functions.sum_to(gx1, x1.shape),
+            ]
+        return [gx0, gx1]
 
 
 def mul(x0, x1) -> Variable:
@@ -220,13 +241,25 @@ def neg(x) -> Variable:
 
 class Sub(Function):
     def forward(self, *xs):
+        self.x0_shape, self.x1_shape = xs[0].shape, xs[1].shape
         return xs[0] - xs[1]
 
     def backward(self, *gys):
-        return [gys[0], -gys[0]]
+        gx0 = gys[0]
+        gx1 = -gys[0]
+        if self.x0_shape != self.x1_shape:  # for broadcast
+            return [
+                dezero.functions.sum_to(gx0, self.x0_shape),
+                dezero.functions.sum_to(gx1, self.x1_shape),
+            ]
+        return [gx0, gx1]
 
 
 def sub(x0, x1) -> Variable:
+    if not isinstance(x0, (np.ndarray, Variable)):
+        x0 = as_array(x0)
+    if not isinstance(x1, (np.ndarray, Variable)):
+        x1 = as_array(x1)
     return Sub()(x0, x1)
 
 
@@ -238,10 +271,16 @@ class Div(Function):
         x0, x1 = self.inputs
         gx0 = gys[0] / x1
         gx1 = gys[0] * (-x0 / x1**2)
+        if x0.shape != x1.shape:  # for broadcast
+            return [
+                dezero.functions.sum_to(gx0, x0.shape),
+                dezero.functions.sum_to(gx1, x1.shape),
+            ]
         return [gx0, gx1]
 
 
 def div(x0, x1) -> Variable:
+    x1 = as_array(x1)
     return Div()(x0, x1)
 
 
