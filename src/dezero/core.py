@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Optional, Any
 import contextlib
 import weakref
@@ -7,6 +8,7 @@ import dezero
 
 class Config:
     enable_backprop = True
+    train = True
 
 
 @contextlib.contextmanager
@@ -17,6 +19,10 @@ def using_config(name: str, value: bool):
         yield
     finally:
         setattr(Config, name, old_value)
+
+
+def test_mode():
+    return using_config("train", False)
 
 
 def no_grad():
@@ -88,14 +94,20 @@ class Variable:
     def __pow__(self, other):
         return pow(self, other)
 
-    def set_creator(self, func):
+    def __getitem__(self, other):
+        return dezero.functions.get_item(self, other)
+
+    def set_creator(self, func: Function) -> None:
         self.creator = func
         self.generation = func.generation + 1
 
-    def cleargrad(self):
+    def unchain(self) -> None:
+        self.creator = None
+
+    def cleargrad(self) -> None:
         self.grad = None
 
-    def backward(self, retain_grad=False, create_graph=False):
+    def backward(self, retain_grad=False, create_graph=False) -> None:
         if self.grad is None:
             self.grad = Variable(np.ones_like(self.data))
         funcs = []
@@ -128,12 +140,22 @@ class Variable:
                 for y in f.outputs:
                     y().grad = None
 
-    def reshape(self, *shape):
+    def unchain_backward(self):
+        if self.creator is not None:
+            funcs = [self.creator]
+            while funcs:
+                f = funcs.pop()
+                for x in f.inputs:
+                    if x.creator is not None:
+                        funcs.append(x.creator)
+                        x.unchain()
+
+    def reshape(self, *shape: int):
         if len(shape) == 1 and isinstance(shape[0], (tuple, list)):
             shape = shape[0]
         return dezero.functions.reshape(self, shape)
 
-    def transpose(self, *axes):
+    def transpose(self, *axes: int):
         if len(axes) == 0:
             axes = None
         elif len(axes) == 1:
@@ -147,6 +169,10 @@ class Variable:
     @property
     def T(self):
         return dezero.functions.transpose(self)
+
+
+class Parameter(Variable):
+    pass
 
 
 def as_variable(obj) -> Variable:
@@ -224,6 +250,10 @@ class Mul(Function):
 
 
 def mul(x0, x1) -> Variable:
+    if not isinstance(x0, (np.ndarray, Variable)):
+        x0 = as_array(x0)
+    if not isinstance(x1, (np.ndarray, Variable)):
+        x1 = as_array(x1)
     return Mul()(x0, x1)
 
 

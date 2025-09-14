@@ -9,11 +9,27 @@ if is_simple_core:
     from dezero.core_simple import as_variable
 else:
     from dezero.core import Variable
+    from dezero.core import Parameter
     from dezero.core import Function
     from dezero.core import using_config
     from dezero.core import no_grad
+    from dezero.core import test_mode
     from dezero.core import as_array
     from dezero.core import as_variable
-    from dezero import functions
+    from dezero.core import Config
+    from dezero.layers import Layer
+    from dezero.models import Model
+    from dezero.datasets import Dataset
+    from dezero.dataloaders import DataLoader
+    from dezero.dataloaders import SeqDataLoader
 
-__version__ = "0.0.1"
+    from dezero import datasets
+    from dezero import dataloaders
+    from dezero import optimizers
+    from dezero import functions
+    from dezero import layers
+    from dezero import utils
+    from dezero import transforms
+
+
+__version__ = "0.1.0"
